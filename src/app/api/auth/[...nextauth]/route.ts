@@ -3,10 +3,17 @@ import { prisma } from "../../../../../prisma/prismaClient";
 import { Adapter } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { compare } from "bcrypt";
+import { SafeUser } from "../../../../../types";
 
 export const authOptions: AuthOptions = {
+  secret: process.env.AUTH_SECRET,
   session: {
     strategy: "jwt",
+  },
+  pages: {
+    signIn: "/account/signin",
+    error: "/account/error",
   },
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
@@ -20,16 +27,31 @@ export const authOptions: AuthOptions = {
         },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, context) {
         if (!credentials!.email || !credentials!.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials!.email,
-          },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials!.email,
+            },
+          });
 
-        return user;
+          const isValidPassword = await compare(
+            credentials!.password,
+            user!.password,
+          );
+
+          if (!isValidPassword) {
+            console.log("Invalid Credentials");
+            return null;
+          }
+
+          return user as SafeUser;
+        } catch (e) {
+          console.log(e);
+          throw new Error(e + "");
+        }
       },
     }),
   ],

@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
 import { User } from ".prisma/client";
 import { prisma } from "../../../../../prisma/prismaClient";
 import { SafeUser } from "../../../../../types";
 import { hash } from "bcrypt";
 export async function POST(req: Request) {
-  const { name, email, password, id } = (await req.json()) as User;
+  const { name, email, password, id, username } = (await req.json()) as User;
 
-  if (!name) return Response.json({ error: "Invalid body" }, { status: 400 });
+  if (!email || !username)
+    return Response.json({ error: "Invalid body" }, { status: 400 });
 
   const hashedPassword = await hash(password, 12);
 
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
   const user = await prisma.user.create({
     data: {
       name,
+      username,
       email,
       password: hashedPassword,
       id: id + "",
