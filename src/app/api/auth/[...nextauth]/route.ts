@@ -27,7 +27,7 @@ export const authOptions: AuthOptions = {
         },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, context) {
+      async authorize(credentials) {
         if (!credentials!.email || !credentials!.password) return null;
 
         try {
@@ -36,6 +36,8 @@ export const authOptions: AuthOptions = {
               email: credentials!.email,
             },
           });
+
+          if (!user) return null;
 
           const isValidPassword = await compare(
             credentials!.password,
