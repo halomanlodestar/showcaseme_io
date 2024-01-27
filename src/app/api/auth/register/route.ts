@@ -4,19 +4,18 @@ import { SafeUser } from "../../../../../types";
 import { hash } from "bcrypt";
 export async function POST(req: Request) {
   const { name, email, password, id, username } = (await req.json()) as User;
-
   if (!email || !username)
     return Response.json({ error: "Invalid body" }, { status: 400 });
 
   const hashedPassword = await hash(password, 12);
 
-  const checkUser = await prisma.user.findUnique({
+  const existingUser = await prisma.user.findUnique({
     where: {
       email: email!,
     },
   });
 
-  if (checkUser)
+  if (existingUser)
     return Response.json({ error: "user already exists" }, { status: 409 });
 
   const user = await prisma.user.create({
