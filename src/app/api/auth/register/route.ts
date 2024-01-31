@@ -1,7 +1,7 @@
 import { User } from ".prisma/client";
 import { prisma } from "../../../../../prisma/prismaClient";
 import { SafeUser } from "../../../../../types";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 export async function POST(req: Request) {
   const { name, email, password, id, username } = (await req.json()) as User;
   if (!email || !username)
