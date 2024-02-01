@@ -1,6 +1,6 @@
 import { AuthError, NextAuthConfig } from "next-auth";
 import Credentials from "@auth/core/providers/credentials";
-import { prisma } from "../prisma/prismaClient";
+import { database } from "@/lib/database";
 import { SafeUser } from "../types";
 import { compare } from "bcryptjs";
 import { SignInSchema } from "@/schemas/SignInSchema";
@@ -24,15 +24,11 @@ export default {
         const { email, password } = validatedFields.data;
 
         try {
-          const user = await prisma.user.findUnique({
-            where: {
-              email,
-            },
-          });
+          const user = await database.getUserByEmail(email);
 
           if (!user) return null;
 
-          const isValidPassword = await compare(password, user!.password);
+          const isValidPassword = await compare(password, user.password!);
 
           if (!isValidPassword) {
             console.log("Invalid Credentials");

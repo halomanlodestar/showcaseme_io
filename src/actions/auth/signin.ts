@@ -3,6 +3,7 @@
 import { SignInSchema } from "@/schemas/SignInSchema";
 import * as z from "zod";
 import { signIn as authSignIn } from "@/auth";
+import { AuthError } from "next-auth";
 
 export const signIn = async (credentials: z.infer<typeof SignInSchema>) => {
   const validatedFields = SignInSchema.safeParse(credentials);
@@ -18,7 +19,12 @@ export const signIn = async (credentials: z.infer<typeof SignInSchema>) => {
       password,
     });
   } catch (e) {
-    console.log(e);
+    if (e instanceof AuthError) {
+      switch (e.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid Credentials" };
+      }
+    }
     throw e;
   }
 };

@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
-import { signIn } from "@/actions/auth";
+import React, { useState } from "react";
+import { signIn } from "@/actions/auth/signin";
 import Link from "next/link";
 import { MdOutlineArrowOutward } from "react-icons/md";
 import * as z from "zod";
@@ -18,8 +18,12 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+import { TailSpin } from "react-loader-spinner";
+import { TiWarningOutline } from "react-icons/ti";
+import { AuthActionResponse } from "../../../../types";
 const SignIn = () => {
+  const [response, setResponse] = useState<AuthActionResponse>();
+  const [loading, setLoading] = useState(false);
   const form = useForm<z.infer<typeof SignInSchema>>({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
@@ -30,10 +34,15 @@ const SignIn = () => {
   const onSubmit: SubmitHandler<z.infer<typeof SignInSchema>> = async (
     data,
   ) => {
-    await signIn({
+    setResponse(undefined);
+    setLoading(true);
+    const response = await signIn({
       email: data.email,
       password: data.password,
     });
+
+    setResponse(response!);
+    setLoading(false);
   };
 
   return (
@@ -81,6 +90,24 @@ const SignIn = () => {
                 )}
               />
 
+              {response?.error && (
+                <div
+                  className={`flex border-red-500 border items-center space-x-2 bg-destructive p-1.5 text-sm rounded`}
+                >
+                  <TiWarningOutline />
+                  <span>{response?.error}</span>
+                </div>
+              )}
+
+              {response?.success && (
+                <div
+                  className={`flex border-red-500 border items-center space-x-2 bg-emerald-600 p-1.5 text-sm rounded`}
+                >
+                  <TiWarningOutline />
+                  <span>{response?.success}</span>
+                </div>
+              )}
+
               <Link
                 href={"/account/forgot"}
                 className={"text-xs py-2 justify-end w-full flex text-blue-400"}
@@ -88,8 +115,22 @@ const SignIn = () => {
                 Forgot password?
               </Link>
 
-              <Button variant={"default"} size={"sm"}>
-                Submit
+              <Button disabled={loading} variant={"default"} size={`sm`}>
+                {loading ? (
+                  <TailSpin
+                    visible={true}
+                    height="20"
+                    width="20"
+                    color="black"
+                    radius="1"
+                    wrapperStyle={{
+                      "font-weight": "10",
+                    }}
+                    wrapperClass=""
+                  />
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </div>
           </form>
